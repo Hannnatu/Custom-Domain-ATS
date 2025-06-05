@@ -80,7 +80,7 @@ project-root/
 
 1. User visits `https://yourdomain.com`
 2. Sees welcome page (index.html)
-3. Submits a form with a domain (e.g. `example.com`)
+3. Submits a form with a domain (e.g. `hannatu.com`)
 4. Lambda handles request, stores domain in DynamoDB
 5. Response returned within \~5s with success message
 
@@ -162,12 +162,6 @@ This will trigger the CI/CD pipeline and deploy everything.
 * `frontend/index.html` is the public welcome page where users interact.
 * DNS propagation may take a few minutes after CloudFront setup.
 * SSL certificates must be requested in **us-east-1** for CloudFront.
-
----
-
-## 📬 Contact & Support
-
-For issues or questions, open an issue on the GitHub repo or email `dev@yourdomain.com`.
 
 ---
 
