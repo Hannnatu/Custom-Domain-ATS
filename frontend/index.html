@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Domain Registration</title>
+</head>
+<body>
+  <h1>Register your custom domain</h1>
+  <form id="domainForm">
+    <input type="text" id="domainInput" placeholder="Enter your domain" required />
+    <button type="submit">Submit</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    const apiUrl = "https://YOUR_API_GATEWAY_ID.execute-api.us-east-1.amazonaws.com/prod/submit"; // Update after deploy
+
+    document.getElementById('domainForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const domain = document.getElementById('domainInput').value;
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain })
+      });
+
+      const data = await res.json();
+      document.getElementById('result').textContent = data.message;
+    });
+  </script>
+</body>
+</html>
+
