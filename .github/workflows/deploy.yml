@@ -9,21 +9,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
+      - name: Debug repo structure
+        run: ls -lR
 
-    - name: Terraform Init
-      run: terraform -chdir=terraform init
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
 
-    - name: Zip Lambda
-      run: |
-        cd lambda
-        zip -r ../terraform/lambda.zip handler.py
-        cd ..
+      - name: Zip Lambda function
+        run: |
+          cd lambda
+          zip -r ../terraform/lambda.zip handler.py
+          cd ..
 
-    - name: Terraform Apply
-      run: terraform -chdir=terraform apply -auto-approve
+      - name: Terraform Init
+        run: terraform -chdir=terraform init
+
+      - name: Terraform Apply
+        run: terraform -chdir=terraform apply -auto-approve
 
