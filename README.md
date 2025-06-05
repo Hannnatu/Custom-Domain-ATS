@@ -117,8 +117,8 @@ project-root/
 ### 1. Clone Repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/aws-platform-assignment.git
-cd aws-platform-assignment
+git clone https://github.com/YOUR_USERNAME/ Custom-Domain-ATS.git .git
+cd  Custom-Domain-ATS.git 
 ```
 
 ### 2. Set Variables in Terraform
