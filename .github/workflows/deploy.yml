@@ -20,7 +20,7 @@ jobs:
 
       - name: Configure AWS credentials (mock for PoC)
         uses: aws-actions/configure-aws-credentials@v2
-       with:
+        with:
     aws-access-key-id: FAKEACCESSKEY123
     aws-secret-access-key: FAKESECRETKEY123
     aws-region: us-east-1
