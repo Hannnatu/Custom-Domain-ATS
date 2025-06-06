@@ -1,53 +1,61 @@
+# Provider configuration
 provider "aws" {
-  region = var.region
+  region = var.aws_region
 }
 
-# Generate a random ID for unique bucket naming
+# Variables with defaults for PoC
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"  # 🔴 Change if needed
+}
+
+variable "domain_name" {
+  type    = string
+  default = "yourdomain.com"  # 🔴 Change to your domain
+}
+
+variable "hosted_zone_id" {
+  type    = string
+  default = "Z123456ABCDEFG"  # 🔴 Replace with your hosted zone ID
+}
+
+# Random ID to avoid bucket name collisions
 resource "random_id" "bucket_id" {
   byte_length = 4
 }
 
-# S3 bucket to host static frontend
+# S3 Bucket to host frontend
 resource "aws_s3_bucket" "bucket" {
   bucket        = "simple-domain-frontend-${random_id.bucket_id.hex}"
   force_destroy = true
 }
 
-# Required: set ownership control explicitly
-resource "aws_s3_bucket_ownership_controls" "ownership" {
+# Bucket ownership controls (recommended for new buckets)
+resource "aws_s3_bucket_ownership_controls" "bucket_ownership" {
   bucket = aws_s3_bucket.bucket.id
-
   rule {
     object_ownership = "BucketOwnerEnforced"
   }
 }
 
-# Set ACL (replaces deprecated 'acl' in aws_s3_bucket)
-resource "aws_s3_bucket_acl" "acl" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
-# Origin Access Identity for CloudFront to access S3 securely
+# CloudFront Origin Access Identity
 resource "aws_cloudfront_origin_access_identity" "oai" {}
 
-# S3 Bucket Policy to allow CloudFront access
+# Bucket policy to allow CloudFront to read S3 objects
 resource "aws_s3_bucket_policy" "bucket_policy" {
   bucket = aws_s3_bucket.bucket.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement: [{
-      Effect = "Allow",
-      Principal = {
-        AWS = aws_cloudfront_origin_access_identity.oai.iam_arn
-      },
-      Action   = "s3:GetObject",
-      Resource = "${aws_s3_bucket.bucket.arn}/*"
+      Effect    = "Allow",
+      Principal = { AWS = aws_cloudfront_origin_access_identity.oai.iam_arn },
+      Action    = "s3:GetObject",
+      Resource  = "${aws_s3_bucket.bucket.arn}/*"
     }]
   })
 }
 
-# Upload frontend index.html
+# Upload index.html to S3 (make sure ../frontend/index.html exists)
 resource "aws_s3_bucket_object" "index" {
   bucket       = aws_s3_bucket.bucket.id
   key          = "index.html"
@@ -55,26 +63,26 @@ resource "aws_s3_bucket_object" "index" {
   content_type = "text/html"
 }
 
-# IAM Role for Lambda
+# IAM Role for Lambda execution
 resource "aws_iam_role" "lambda_exec_role" {
   name = "lambda-exec-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement: [{
-      Effect = "Allow",
+      Effect    = "Allow",
       Principal = { Service = "lambda.amazonaws.com" },
-      Action   = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
 
-# Attach Lambda basic execution policy
+# Attach basic execution policy to Lambda role
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# DynamoDB table for domain data
+# DynamoDB table to store domains
 resource "aws_dynamodb_table" "domains" {
   name         = "domains"
   billing_mode = "PAY_PER_REQUEST"
@@ -85,10 +93,10 @@ resource "aws_dynamodb_table" "domains" {
   }
 }
 
-# Lambda function definition
+# Lambda function
 resource "aws_lambda_function" "api" {
   function_name = "domain_api"
-  filename      = "lambda.zip"
+  filename      = "lambda.zip"  # 🔴 Make sure this file exists before deploy
   handler       = "handler.lambda_handler"
   runtime       = "python3.10"
   role          = aws_iam_role.lambda_exec_role.arn
@@ -102,29 +110,13 @@ resource "aws_lambda_function" "api" {
   source_code_hash = filebase64sha256("lambda.zip")
 }
 
-# CloudWatch log group for Lambda
+# CloudWatch Logs for Lambda
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${aws_lambda_function.api.function_name}"
   retention_in_days = 14
 }
 
-# CloudWatch alarm for Lambda errors
-resource "aws_cloudwatch_metric_alarm" "lambda_error_alarm" {
-  alarm_name          = "lambda-domain-api-errors"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 1
-  metric_name         = "Errors"
-  namespace           = "AWS/Lambda"
-  period              = 60
-  statistic           = "Sum"
-  threshold           = 1
-  alarm_description   = "Alarm when Lambda errors exceed 0"
-  dimensions = {
-    FunctionName = aws_lambda_function.api.function_name
-  }
-}
-
-# API Gateway REST API setup
+# API Gateway setup for Lambda
 resource "aws_api_gateway_rest_api" "api" {
   name = "domain-api"
 }
@@ -165,13 +157,12 @@ resource "aws_api_gateway_deployment" "deployment" {
   stage_name  = "prod"
 }
 
-# ACM certificate for domain
+# ACM Certificate (DNS validation)
 resource "aws_acm_certificate" "cert" {
   domain_name       = var.domain_name
   validation_method = "DNS"
 }
 
-# Route53 record for ACM validation
 resource "aws_route53_record" "cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
@@ -188,19 +179,16 @@ resource "aws_route53_record" "cert_validation" {
   records = [each.value.record]
 }
 
-# ACM certificate validation resource
 resource "aws_acm_certificate_validation" "cert_valid" {
   certificate_arn         = aws_acm_certificate.cert.arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
 }
 
-# CloudFront logging bucket
+# CloudFront Distribution
 resource "aws_s3_bucket" "logging" {
   bucket = "cf-logging-${random_id.bucket_id.hex}"
-  acl    = "log-delivery-write"
 }
 
-# CloudFront distribution serving the site
 resource "aws_cloudfront_distribution" "cdn" {
   enabled             = true
   default_root_object = "index.html"
@@ -214,9 +202,8 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   logging_config {
-    bucket          = "${aws_s3_bucket.logging.bucket}.s3.amazonaws.com"
-    prefix          = "logs/"
-    include_cookies = false
+    bucket = "${aws_s3_bucket.logging.bucket}.s3.amazonaws.com"
+    prefix = "logs/"
   }
 
   default_cache_behavior {
@@ -247,7 +234,6 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 }
 
-# Route53 Alias record pointing to CloudFront
 resource "aws_route53_record" "cloudfront_alias" {
   zone_id = var.hosted_zone_id
   name    = var.domain_name
@@ -258,3 +244,4 @@ resource "aws_route53_record" "cloudfront_alias" {
     evaluate_target_health = false
   }
 }
+
