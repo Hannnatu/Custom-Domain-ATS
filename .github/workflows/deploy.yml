@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    # Comment out to disable auto-deploy
+    # Uncomment below lines to trigger only on terraform file or lambda changes
     # paths:
     #   - '**.tf'
     #   - 'lambda.zip'
@@ -18,13 +18,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # Mock AWS creds for PoC: replace with real secrets for real deploy
       - name: Configure AWS credentials (mock for PoC)
         uses: aws-actions/configure-aws-credentials@v2
-       with:
-    aws-access-key-id: FAKEACCESSKEY123
-    aws-secret-access-key: FAKESECRETKEY123
-    aws-region: us-east-1
-
+        with:
+          aws-access-key-id: FAKEACCESSKEY123
+          aws-secret-access-key: FAKESECRETKEY123
+          aws-region: us-east-1
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -40,6 +40,7 @@ jobs:
       - name: Terraform Plan
         run: terraform plan
 
+      # Uncomment below for automatic apply - be careful on real deploys!
       # - name: Terraform Apply
       #   run: terraform apply -auto-approve
 
