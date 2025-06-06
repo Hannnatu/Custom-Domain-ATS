@@ -1,42 +1,57 @@
-# Configure AWS Provider
 provider "aws" {
-  region = "us-east-1"  # ● Change if deploying to a different AWS region
+  region = var.region
 }
 
-# Generate a unique name as per namig=ng conventions
+# Generate a random ID for unique bucket naming
 resource "random_id" "bucket_id" {
   byte_length = 4
 }
 
-# S3 Bucket for static site content
+# S3 bucket to host static frontend
 resource "aws_s3_bucket" "bucket" {
-  bucket        = "simple-domain-frontend-${random_id.bucket_id.hex}"  # Unique bucket name
+  bucket        = "simple-domain-frontend-${random_id.bucket_id.hex}"
   force_destroy = true
-  acl           = "private"  # ● Deprecated - consider aws_s3_bucket_acl resource
 }
 
-# CloudFront Origin Access Identity for secure S3 access
+# Required: set ownership control explicitly
+resource "aws_s3_bucket_ownership_controls" "ownership" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+# Set ACL (replaces deprecated 'acl' in aws_s3_bucket)
+resource "aws_s3_bucket_acl" "acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
+# Origin Access Identity for CloudFront to access S3 securely
 resource "aws_cloudfront_origin_access_identity" "oai" {}
 
-# S3 bucket policy allowing CloudFront OAI to read objects
+# S3 Bucket Policy to allow CloudFront access
 resource "aws_s3_bucket_policy" "bucket_policy" {
   bucket = aws_s3_bucket.bucket.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement: [{
       Effect = "Allow",
-      Principal = { AWS = aws_cloudfront_origin_access_identity.oai.iam_arn },
-      Action = "s3:GetObject",
+      Principal = {
+        AWS = aws_cloudfront_origin_access_identity.oai.iam_arn
+      },
+      Action   = "s3:GetObject",
       Resource = "${aws_s3_bucket.bucket.arn}/*"
     }]
   })
 }
 
-# Upload index.html to S3
+# Upload frontend index.html
 resource "aws_s3_bucket_object" "index" {
   bucket       = aws_s3_bucket.bucket.id
   key          = "index.html"
-  source       = "../frontend/index.html"  # ● Make sure path is correct
+  source       = "../frontend/index.html"
   content_type = "text/html"
 }
 
@@ -243,4 +258,3 @@ resource "aws_route53_record" "cloudfront_alias" {
     evaluate_target_health = false
   }
 }
-

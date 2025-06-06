@@ -1,14 +1,18 @@
-# Variables to customize deployment
+variable "region" {
+  description = "AWS region to deploy resources"
+  type        = string
+  default     = "us-east-1"
+}
 
 variable "domain_name" {
-  description = "The custom domain to use"
+  description = "Custom domain name to be used with CloudFront"
   type        = string
-  default     = "yourdomain.com"  # ● Replace with your actual domain or override this value when applying
+  default     = "yourdomain.com" # 🔴 Replace with your domain
 }
 
 variable "hosted_zone_id" {
-  description = "Route53 Hosted Zone ID"
+  description = "Hosted Zone ID for Route 53"
   type        = string
-  default     = "Z123456ABCDEFG"  # ● Replace with your actual Hosted Zone ID or override this value
+  default     = "Z123456ABCDEFG" # 🔴 Replace with your hosted zone ID
 }
 
