@@ -174,7 +174,7 @@ This will trigger the CI/CD pipeline and deploy everything.
 
 ## 💸 AWS Costs Incurred
 
-These are the AWS services that may incur cost (if used beyond free tier):
+These are the AWS services that may incur cost:
 
 | Service     | Monthly Est. (USD) | Notes                          |
 | ----------- | ------------------ | ------------------------------ |
