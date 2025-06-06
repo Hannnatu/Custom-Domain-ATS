@@ -9,29 +9,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      - name: List root directory
-        run: ls -la
+    # Debug the repo structure
+    - name: List root directory
+      run: ls -la
 
-      - name: List terraform directory
-        run: ls -la terraform || echo "terraform directory not found"
+    - name: List Terraform directory
+      run: ls -la terraform || echo "terraform directory not found"
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+    - name: List Lambda directory
+      run: ls -la lambda || echo "lambda directory not found"
 
-      - name: Zip Lambda
-        run: |
-          ls -la lambda || echo "lambda directory not found"
-          cd lambda
-          zip -r ../terraform/lambda.zip handler.py
-          cd ..
+    - name: Check files exist
+      run: |
+        if [ ! -f lambda/handler.py ]; then
+          echo "Missing lambda/handler.py!"
+          exit 1
+        fi
+        if [ ! -d terraform ]; then
+          echo "Missing terraform directory!"
+          exit 1
+        fi
 
-      - name: Terraform Init
-        run: terraform -chdir=terraform init
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
 
-      - name: Terraform Apply
-        run: terraform -chdir=terraform apply -auto-approve
+    - name: Zip Lambda function
+      run: |
+        mkdir -p terraform
+        zip -j terraform/lambda.zip lambda/handler.py
 
+    - name: Terraform Init
+      run: terraform -chdir=terraform init
+
+    - name: Terraform Apply
+      run: terraform -chdir=terraform apply -auto-approve
 
