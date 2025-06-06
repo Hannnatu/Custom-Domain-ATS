@@ -1,10 +1,10 @@
-# Custom-Domain-Ats`
+# Custom-Domain-Ats
 
 This project is a complete serverless platform built using **AWS**, **Terraform**, **GitHub Actions (CI/CD)**, and a minimal **frontend** to support domain submissions and automatic secure (HTTPS) hosting via **CloudFront + ACM**.
 
 ---
 
-## 🌐 Overview
+## Overview
 
 * **Users** land on a static welcome page hosted via CloudFront (HTTPS).
 * They can **submit a custom domain** through a form.
@@ -14,7 +14,7 @@ This project is a complete serverless platform built using **AWS**, **Terraform*
 
 ---
 
-## 🧠 Architecture Diagram
+## Architecture Diagram
 
 ```
 +---------+     +-------------+     +------------------+
@@ -44,8 +44,6 @@ This project is a complete serverless platform built using **AWS**, **Terraform*
 
 ---
 
-## 🧰 Developer Breakdown
-
 ### 📁 Project Structure
 
 ```
@@ -64,9 +62,9 @@ custom-domain-ats/
 
 ---
 
-## 🏗️ Step-by-Step: How It Works
+##Step-by-Step: How It Works
 
-### 👨‍💻 Developer Flow
+### Developer Flow
 
 1. **Write Code**: Modify frontend, lambda, or Terraform files.
 2. **Push to GitHub**: Triggers GitHub Actions workflow.
@@ -78,7 +76,7 @@ custom-domain-ats/
    * Run Terraform to deploy infrastructure
 4. **AWS Infrastructure** is updated: Lambda, API Gateway, S3, CloudFront, etc.
 
-### 🧑‍💻 User Flow
+### User Flow
 
 1. User visits `https://yourdomain.com`
 2. Sees welcome page (index.html)
@@ -88,7 +86,7 @@ custom-domain-ats/
 
 ---
 
-## ⚙️ Technologies Used
+## ⚙Technologies Used
 
 * **Terraform**: Infrastructure as Code
 * **AWS Services**:
@@ -105,7 +103,7 @@ custom-domain-ats/
 
 ---
 
-## 📈 Monitoring & Observability
+## Monitoring & Observability
 
 * **Lambda Logs**: CloudWatch log group `/aws/lambda/domain_api`
 * **Error Alarms**: Triggered if Lambda throws any error in production
