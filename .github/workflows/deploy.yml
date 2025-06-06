@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    # Comment out to disable auto-deploy
+    # Optional: uncomment to trigger only on TF or Lambda changes
     # paths:
     #   - '**.tf'
     #   - 'lambda.zip'
@@ -21,10 +21,9 @@ jobs:
       - name: Configure AWS credentials (mock for PoC)
         uses: aws-actions/configure-aws-credentials@v2
         with:
-    aws-access-key-id: FAKEACCESSKEY123
-    aws-secret-access-key: FAKESECRETKEY123
-    aws-region: us-east-1
-
+          aws-access-key-id: FAKEACCESSKEY123       # 🔴 Replace with real key for production
+          aws-secret-access-key: FAKESECRETKEY123   # 🔴 Replace with real secret
+          aws-region: us-east-1                     # ✅ Matches var.aws_region default
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -34,12 +33,13 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Format
+      - name: Terraform Format Check
         run: terraform fmt -check
 
       - name: Terraform Plan
         run: terraform plan
 
-      # - name: Terraform Apply
+      # - name: Terraform Apply (Disabled for PoC)
       #   run: terraform apply -auto-approve
+
 
