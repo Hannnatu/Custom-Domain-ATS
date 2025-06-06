@@ -9,29 +9,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v3
 
-    # Debug the repo structure
-    - name: List root directory
+    - name: List root directory (debug)
       run: ls -la
 
-    - name: List Terraform directory
+    - name: List terraform directory (debug)
       run: ls -la terraform || echo "terraform directory not found"
 
-    - name: List Lambda directory
+    - name: List lambda directory (debug)
       run: ls -la lambda || echo "lambda directory not found"
 
-    - name: Check files exist
+    - name: Check for required files
       run: |
-        if [ ! -f lambda/handler.py ]; then
-          echo "Missing lambda/handler.py!"
-          exit 1
-        fi
-        if [ ! -d terraform ]; then
-          echo "Missing terraform directory!"
-          exit 1
-        fi
+        test -f lambda/handler.py || (echo "Missing lambda/handler.py" && exit 1)
+        test -d terraform || (echo "Missing terraform directory" && exit 1)
+
+    - name: Configure AWS credentials (🔴 mock placeholder)
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}        # 🔴 Set in GitHub Secrets
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}# 🔴 Set in GitHub Secrets
+        aws-region: ${{ secrets.AWS_REGION }}                       # 🔴 Set in GitHub Secrets
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -46,4 +46,3 @@ jobs:
 
     - name: Terraform Apply
       run: terraform -chdir=terraform apply -auto-approve
-

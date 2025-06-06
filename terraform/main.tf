@@ -1,29 +1,24 @@
+# Configure AWS Provider
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-1"  # ● Change if deploying to a different AWS region
 }
 
-variable "domain_name" {
-  default = "yourdomain.com"
-}
-
-variable "hosted_zone_id" {
-  default = "Z123456ABCDEFG"
-}
-
-# ---------------- S3 Bucket ----------------
+# Generate a unique name as per namig=ng conventions
 resource "random_id" "bucket_id" {
   byte_length = 4
 }
 
+# S3 Bucket for static site content
 resource "aws_s3_bucket" "bucket" {
-  bucket = "simple-domain-frontend-${random_id.bucket_id.hex}"
+  bucket        = "simple-domain-frontend-${random_id.bucket_id.hex}"  # Unique bucket name
   force_destroy = true
-  acl = "private"
+  acl           = "private"  # ● Deprecated - consider aws_s3_bucket_acl resource
 }
 
-# CloudFront OAI
+# CloudFront Origin Access Identity for secure S3 access
 resource "aws_cloudfront_origin_access_identity" "oai" {}
 
+# S3 bucket policy allowing CloudFront OAI to read objects
 resource "aws_s3_bucket_policy" "bucket_policy" {
   bucket = aws_s3_bucket.bucket.id
   policy = jsonencode({
@@ -37,15 +32,15 @@ resource "aws_s3_bucket_policy" "bucket_policy" {
   })
 }
 
-# Upload index.html
+# Upload index.html to S3
 resource "aws_s3_bucket_object" "index" {
-  bucket = aws_s3_bucket.bucket.id
-  key    = "index.html"
-  source = "../frontend/index.html"
+  bucket       = aws_s3_bucket.bucket.id
+  key          = "index.html"
+  source       = "../frontend/index.html"  # ● Make sure path is correct
   content_type = "text/html"
 }
 
-# ---------------- Lambda + API Gateway ----------------
+# IAM Role for Lambda
 resource "aws_iam_role" "lambda_exec_role" {
   name = "lambda-exec-role"
   assume_role_policy = jsonencode({
@@ -53,16 +48,18 @@ resource "aws_iam_role" "lambda_exec_role" {
     Statement: [{
       Effect = "Allow",
       Principal = { Service = "lambda.amazonaws.com" },
-      Action: "sts:AssumeRole"
+      Action   = "sts:AssumeRole"
     }]
   })
 }
 
+# Attach Lambda basic execution policy
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# DynamoDB table for domain data
 resource "aws_dynamodb_table" "domains" {
   name         = "domains"
   billing_mode = "PAY_PER_REQUEST"
@@ -73,6 +70,7 @@ resource "aws_dynamodb_table" "domains" {
   }
 }
 
+# Lambda function definition
 resource "aws_lambda_function" "api" {
   function_name = "domain_api"
   filename      = "lambda.zip"
@@ -89,11 +87,13 @@ resource "aws_lambda_function" "api" {
   source_code_hash = filebase64sha256("lambda.zip")
 }
 
+# CloudWatch log group for Lambda
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${aws_lambda_function.api.function_name}"
   retention_in_days = 14
 }
 
+# CloudWatch alarm for Lambda errors
 resource "aws_cloudwatch_metric_alarm" "lambda_error_alarm" {
   alarm_name          = "lambda-domain-api-errors"
   comparison_operator = "GreaterThanThreshold"
@@ -109,7 +109,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_alarm" {
   }
 }
 
-# Lambda API Gateway
+# API Gateway REST API setup
 resource "aws_api_gateway_rest_api" "api" {
   name = "domain-api"
 }
@@ -145,17 +145,18 @@ resource "aws_lambda_permission" "api_gateway" {
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [aws_api_gateway_integration.lambda_submit]
+  depends_on  = [aws_api_gateway_integration.lambda_submit]
   rest_api_id = aws_api_gateway_rest_api.api.id
   stage_name  = "prod"
 }
 
-# ---------------- ACM, CloudFront, DNS ----------------
+# ACM certificate for domain
 resource "aws_acm_certificate" "cert" {
   domain_name       = var.domain_name
   validation_method = "DNS"
 }
 
+# Route53 record for ACM validation
 resource "aws_route53_record" "cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
@@ -172,6 +173,7 @@ resource "aws_route53_record" "cert_validation" {
   records = [each.value.record]
 }
 
+# ACM certificate validation resource
 resource "aws_acm_certificate_validation" "cert_valid" {
   certificate_arn         = aws_acm_certificate.cert.arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
@@ -183,6 +185,7 @@ resource "aws_s3_bucket" "logging" {
   acl    = "log-delivery-write"
 }
 
+# CloudFront distribution serving the site
 resource "aws_cloudfront_distribution" "cdn" {
   enabled             = true
   default_root_object = "index.html"
@@ -196,8 +199,8 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   logging_config {
-    bucket = "${aws_s3_bucket.logging.bucket}.s3.amazonaws.com"
-    prefix = "logs/"
+    bucket          = "${aws_s3_bucket.logging.bucket}.s3.amazonaws.com"
+    prefix          = "logs/"
     include_cookies = false
   }
 
@@ -229,6 +232,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 }
 
+# Route53 Alias record pointing to CloudFront
 resource "aws_route53_record" "cloudfront_alias" {
   zone_id = var.hosted_zone_id
   name    = var.domain_name
