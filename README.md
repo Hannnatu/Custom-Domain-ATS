@@ -1,4 +1,5 @@
-# Custom-Domain-ATS
+# Custom-Domain-Ats`
+
 This project is a complete serverless platform built using **AWS**, **Terraform**, **GitHub Actions (CI/CD)**, and a minimal **frontend** to support domain submissions and automatic secure (HTTPS) hosting via **CloudFront + ACM**.
 
 ---
@@ -43,14 +44,15 @@ This project is a complete serverless platform built using **AWS**, **Terraform*
 
 ---
 
-## 🛠 Developer Breakdown
+## 🧰 Developer Breakdown
 
 ### 📁 Project Structure
 
 ```
-project-root/
+custom-domain-ats/
 ├── terraform/              # All Terraform infra code
 │   ├── main.tf
+│   ├── variables.tf        # Terraform variables
 │   └── lambda.zip          # Built from `lambda/`
 ├── lambda/                 # Lambda function code
 │   └── handler.py
@@ -80,7 +82,7 @@ project-root/
 
 1. User visits `https://yourdomain.com`
 2. Sees welcome page (index.html)
-3. Submits a form with a domain (e.g. `hannatu.com`)
+3. Submits a form with a domain (e.g. `homerunner.com`)
 4. Lambda handles request, stores domain in DynamoDB
 5. Response returned within \~5s with success message
 
@@ -117,23 +119,29 @@ project-root/
 ### 1. Clone Repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ Custom-Domain-ATS.git .git
-cd  Custom-Domain-ATS.git 
+git clone https://github.com/YOUR_USERNAME/custom-domain-ats.git
+cd custom-domain-ats
 ```
 
-### 2. Set Variables in Terraform
+### 2. Set Variables in `variables.tf`
 
-Update `terraform/main.tf`:
+Create or edit the file at `terraform/variables.tf`:
 
 ```hcl
 variable "domain_name" {
-  default = "yourdomain.com"
+  description = "Your main domain name"
+  type        = string
+  default     = "yourdomain.com"
 }
 
 variable "hosted_zone_id" {
-  default = "ZXXXXXXXXXXXX"
+  description = "Route53 hosted zone ID for domain"
+  type        = string
+  default     = "ZXXXXXXXXXXXX"
 }
 ```
+
+> 📝 Replace `yourdomain.com` and `ZXXXXXXXXXXXX` with your actual domain and hosted zone ID.
 
 ### 3. Deploy Infrastructure
 
@@ -156,15 +164,44 @@ This will trigger the CI/CD pipeline and deploy everything.
 
 ---
 
-## 💡 Notes
+## 🚧 Constraints & Errors Faced
 
-* `lambda/handler.py` contains the logic for handling domain submissions.
-* `frontend/index.html` is the public welcome page where users interact.
-* DNS propagation may take a few minutes after CloudFront setup.
-* SSL certificates must be requested in **us-east-1** for CloudFront.
+* **IAM Role Permissions**: Required detailed IAM policies for Lambda, API Gateway, Route53, ACM, CloudWatch.
+* **ACM Certificates**: Must be in `us-east-1` for CloudFront compatibility.
+* **DNS Propagation Delay**: Custom domains can take 2–10 minutes to reflect.
+* **Lambda Build & Zip**: Ensure the Lambda file is zipped and updated before `terraform apply`.
+* **S3 + CloudFront TTL**: Static files are cached, so updates may be delayed.
 
 ---
+
+## 💸 AWS Costs Incurred
+
+These are the AWS services that may incur cost (if used beyond free tier):
+
+| Service     | Monthly Est. (USD) | Notes                          |
+| ----------- | ------------------ | ------------------------------ |
+| Lambda      | \~\$0.20           | Per 1M requests & compute time |
+| API Gateway | \~\$3.50           | For REST APIs                  |
+| S3 Hosting  | \~\$0.10           | Based on storage/requests      |
+| CloudFront  | \~\$1–5            | Based on data transfer         |
+| ACM         | Free               | Public certificates            |
+| DynamoDB    | \~\$1–2            | On-demand write/read units     |
+| Route53     | \$0.50/domain      | For hosted zone + DNS queries  |
+
+---
+
+## ✏️ Where to Edit with Your Info
+
+* `variables.tf`: Update domain name and hosted zone ID.
+* `frontend/index.html`: Customize your welcome page + input form.
+* `lambda/handler.py`: Adjust domain validation or logic.
+* `.github/workflows/deploy.yml`: Add your AWS credentials/secrets securely.
+* `main.tf`: Link your ACM cert ARN and Route53 records if customizing.
+
+---
+
 
 ## 📜 License
 
 MIT License. Feel free to use, extend, and improve!
+
