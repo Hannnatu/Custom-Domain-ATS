@@ -233,7 +233,10 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
-  aliases = [var.domain_name]
+  aliases = compact([
+    var.domain_name,
+    var.custom_subdomain != "" ? var.custom_subdomain : null
+  ])
 
   viewer_certificate {
     acm_certificate_arn = aws_acm_certificate.cert.arn
@@ -247,7 +250,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 }
 
-# Route53 Alias record pointing to CloudFront
+# Route53 Alias record pointing to CloudFront (for main domain)
 resource "aws_route53_record" "cloudfront_alias" {
   zone_id = var.hosted_zone_id
   name    = var.domain_name
@@ -258,3 +261,14 @@ resource "aws_route53_record" "cloudfront_alias" {
     evaluate_target_health = false
   }
 }
+
+# Route53 CNAME record for optional subdomain (jobs.mycompany.com)
+resource "aws_route53_record" "custom_subdomain_cname" {
+  count   = var.custom_subdomain != "" ? 1 : 0
+  zone_id = var.hosted_zone_id
+  name    = var.custom_subdomain
+  type    = "CNAME"
+  ttl     = 300
+  records = [aws_cloudfront_distribution.cdn.domain_name]
+}
+
