@@ -6,13 +6,10 @@ name: Terraform CI/CD
       - main
 <<<<<<< HEAD:.github/workflows/deploy.yml.disabled
 <<<<<<< HEAD
-    # Uncomment below lines to trigger only on terraform file or lambda changes
-=======
-    # Optional: uncomment to trigger only on TF or Lambda changes
->>>>>>> 8cb34579aa6e9eb64ef53918cd1d9effa94eb447
-=======
-    # Optional: uncomment to trigger only on TF or Lambda files
->>>>>>> 5e5e8f3890f95e08c1ef178f5c9a9895a9ef48ed:.github/workflows/deploy.yml
+    # Uncomment to trigger only on TF or Lambda files
+>>>>>>> 5e5e8f3name: Terraform CI/CD
+
+# Workflow disabled — no triggers 890f95e08c1ef178f5c9a9895a9ef48ed:.github/workflows/deploy.yml
     # paths:
     #   - '**.tf'
     #   - 'lambda.zip'
