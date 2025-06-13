@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome to Homerun Platform</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      color: white;
+      background: linear-gradient(180deg, #3a0ca3 0%, #4361ee 70%, #720026 100%);
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(2px 2px at 10% 20%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 20% 40%, #eee, transparent),
+        radial-gradient(2px 2px at 30% 60%, #fff, transparent),
+        radial-gradient(1px 1px at 50% 25%, #ddd, transparent),
+        radial-gradient(2.5px 2.5px at 65% 80%, #fff, transparent),
+        radial-gradient(1.7px 1.7px at 80% 40%, #eee, transparent);
+      background-repeat: repeat;
+      background-size: 100vw 100vh;
+      animation: twinkle 6s linear infinite alternate;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    @keyframes twinkle {
+      0%, 100% {opacity: 0.8;}
+      50% {opacity: 1;}
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: 3rem 1rem 6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+    }
+
+    p {
+      font-size: 1.3rem;
+      max-width: 600px;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+    }
+
+    a.button, button {
+      background: linear-gradient(45deg, #6a11cb, #2575fc);
+      color: #fff;
+      font-weight: 700;
+      padding: 1rem 3rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1.2rem;
+      box-shadow: 0 8px 20px rgba(101, 52, 255, 0.6);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    a.button:hover, button:hover {
+      box-shadow: 0 10px 30px rgba(101, 52, 255, 0.9);
+      transform: translateY(-3px);
+    }
+
+    footer {
+      position: absolute;
+      bottom: 1rem;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .mountains {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(to top, #1e1f29 0%, transparent 100%);
+      clip-path: polygon(
+        0% 100%, 10% 50%, 20% 70%, 30% 45%, 40% 80%, 50% 55%, 60% 90%,
+        70% 50%, 80% 75%, 90% 60%, 100% 100%, 100% 100%, 0% 100%
+      );
+      z-index: 1;
+    }
+
+    /* Input Form Section */
+    .form-section {
+      display: none;
+      text-align: center;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .form-section input {
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+      margin-right: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 2.25rem;
+      }
+      p {
+        font-size: 1.1rem;
+      }
+      a.button, button {
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+      }
+      .mountains {
+        height: 100px;
+      }
+      .form-section input {
+        width: 100%;
+        margin: 0 0 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Welcome Section -->
+    <div id="welcome-section">
+      <h1>Come Join Us !!</h1>
+      <p>Connect your own domain.</p>
+      <a class="button" onclick="showForm()">Get Started</a>
+    </div>
+
+    <!-- Form Section -->
+    <div id="form-section" class="form-section">
+      <h1>Connect Your Domain</h1>
+      <form action="/provision" method="post">
+        <input type="text" name="domain" placeholder="e.g., jobs.yourcompany.com" required />
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="mountains"></div>
+  <footer>&copy; 2025 Homerun. All rights reserved.</footer>
+
+  <script>
+    function showForm() {
+      document.getElementById('welcome-section').style.display = 'none';
+      document.getElementById('form-section').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

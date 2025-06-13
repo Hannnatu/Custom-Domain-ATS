@@ -82,7 +82,7 @@ custom-domain-ats/
 2. Sees welcome page (index.html)
 3. Submits a form with a domain (e.g. `homerunner.com`)
 4. Lambda handles request, stores domain in DynamoDB
-5. Response returned within \~5s with success message
+5. Response returned within \~5m with success message
 
 ---
 
@@ -195,7 +195,9 @@ These are the AWS services that may incur cost:
 * `lambda/handler.py`: Adjust domain validation or logic.
 * `.github/workflows/deploy.yml`: Add your AWS credentials/secrets securely.
 * `main.tf`: Link your ACM cert ARN and Route53 records if customizing.
-
+* IMPORTANT: Configure the CNAME record in Route53
+Terraform automatically creates a CNAME (or Alias A) record that maps your custom domain (e.g., jobs.yourdomain.com) to the CloudFront distribution domain.
+Ensure your hosted zone is correct and that this DNS entry exists for your domain to route traffic properly to CloudFront over HTTPS.
 ---
 
 
