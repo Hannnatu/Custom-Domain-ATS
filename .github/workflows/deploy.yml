@@ -1,45 +1,50 @@
-name: Terraform CI/CD
+name: CI/CD Pipeline
 
-#on: {}   # Workflow disabled
+on:
   push:
-    branches:
-      - main
-    # Optional: uncomment to trigger only on TF or Lambda files
-    # paths:
-    #   - '**.tf'
-    #   - 'lambda.zip'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   terraform:
-    name: 'Terraform Plan & Apply'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials (mock for PoC)
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Set up Python for Lambda tests
+        uses: actions/setup-python@v4
         with:
-          aws-access-key-id: FAKEACCESSKEY123       # 🔴 Replace with real key for production
-          aws-secret-access-key: FAKESECRETKEY123   # 🔴 Replace with real secret
-          aws-region: us-east-1                     # ✅ Matches var.aws_region default
+          python-version: '3.10'
+
+      - name: Install Lambda dependencies
+        working-directory: ./lambda
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Lambda unit tests
+        working-directory: ./lambda
+        run: |
+          pytest
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.6
 
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Format Check
-        run: terraform fmt -check
+      - name: Terraform Validate
+        run: terraform validate
 
       - name: Terraform Plan
         run: terraform plan
 
-      # - name: Terraform Apply (Disabled for PoC)
-      #   run: terraform apply -auto-approve
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
+
 
 
