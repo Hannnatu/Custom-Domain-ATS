@@ -117,7 +117,7 @@ custom-domain-ats/
 ### 1. Clone Repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/custom-domain-ats.git
+git clone https://github.com/Hannnatu/custom-domain-ats.git
 cd custom-domain-ats
 ```
 
