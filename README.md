@@ -17,50 +17,21 @@ This project is a complete serverless platform built using **AWS**, **Terraform*
 ## Architecture Diagram
 
 ```
-                                      +------------------+
-                                      |  Users/Clients   |
-                                      +--------+---------+
-                                               |
-                                               | HTTPS Request (Custom Domain)
-                                               v
-                                  +------------+------------+
-                                  |       CloudFront        |
-                                  |  (CDN + SSL via ACM)    |
-                                  +------------+------------+
-                                               |
-                    +--------------------------+--------------------------+
-                    |                                                     |
-          (Static site hosting)                                   (API requests)
-                    |                                                     |
-        +-----------+------------+                          +-------------+-------------+
-        |    S3 Bucket (Frontend) |                          |  API Gateway (REST API)   |
-        |  (Hosts index.html etc) |                          +-------------+-------------+
-        +------------------------+                                        |
-                                                                         |
-                                                         +---------------+--------------+
-                                                         |        AWS Lambda Function    |
-                                                         |   (Business Logic & DynamoDB) |
-                                                         +---------------+--------------+
-                                                                         |
-                                                         +---------------+--------------+
-                                                         |        DynamoDB Table          |
-                                                         |    (Stores submitted domains) |
-                                                         +-------------------------------+
+        Users                                     
+          |
+      CloudFront (CDN + SSL)
+          |
+     --------------------
+     |                  |
+   S3 Bucket        API Gateway
+  (Static site)          |
+                        Lambda
+                         |
+                     DynamoDB
+                         |
+                   CloudWatch Logs & Alarms
 
-                                                                 |
-                                                                 v
-                                                      +----------------------+
-                                                      |    CloudWatch Logs    |
-                                                      |  (Lambda logs &      |
-                                                      |   API Gateway logs)  |
-                                                      +----------------------+
-
-                                                                 |
-                                                                 v
-                                                      +----------------------+
-                                                      | CloudWatch Alarms &   |
-                                                      | Metrics (e.g. errors) |
-                                                      +----------------------+
+                                 
 
 
 ---
@@ -69,32 +40,28 @@ This project is a complete serverless platform built using **AWS**, **Terraform*
 
 ```
 custom-domain-ats/
-│
-├── lambda/                         
-│   ├── handler.py                  # Your Lambda function logic
-│   ├── test_handler.py             # Pytest unit tests for Lambda
-│   └── requirements.txt            # boto3 + pytest
-│
-├── frontend/                       
+├── lambda/
+│   ├── handler.py             # Your Lambda function logic
+│   ├── test_handler.py        # Pytest unit tests for Lambda
+│   └── requirements.txt       # boto3 + pytest
+├── frontend/
 │   ├── index.html
 │   └── error.html
-│
 ├── terraform/
-│   ├── acm_route53.tf              # ACM cert + Route53 validation records
-│   ├── api-gateway.tf              # API Gateway setup for /submit route
-│   ├── dynamodb_lambda.tf          # DynamoDB + Lambda definition
-│   ├── iam_lambda.tf               # IAM roles & permissions for Lambda
-│   ├── s3_cloudfront.tf            # S3 bucket + CloudFront distribution
-│   ├── provider.tf                 # AWS provider and backend block
-│   ├── variables.tf                # All input variables
-│   ├── output.tf                   # Output values (URLs, etc.)
-│
+│   ├── acm_route53.tf         # ACM cert + Route53 validation records
+│   ├── api-gateway.tf         # API Gateway setup for /submit route
+│   ├── dynamodb_lambda.tf     # DynamoDB + Lambda definition
+│   ├── iam_lambda.tf          # IAM roles & permissions for Lambda
+│   ├── s3_cloudfront.tf       # S3 bucket + CloudFront distribution
+│   ├── provider.tf            # AWS provider and backend block
+│   ├── variables.tf           # All input variables
+│   └── output.tf              # Output values (URLs, etc.)
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml              # GitHub Actions CI/CD pipeline
-│
-├── .gitignore                      # Ignore build, cache, state files
-└── README.md                       # Setup, deployment, explanation
+│       └── deploy.yml         # GitHub Actions CI/CD pipeline
+├── .gitignore                 # Ignore build, cache, state files
+└── README.md                  # Setup, deployment, explanation
+
 
 ```
 
