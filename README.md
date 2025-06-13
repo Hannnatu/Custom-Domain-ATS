@@ -17,30 +17,51 @@ This project is a complete serverless platform built using **AWS**, **Terraform*
 ## Architecture Diagram
 
 ```
-+---------+     +-------------+     +------------------+
-|         |     |  API GW +   |     |  CloudWatch Logs |
-|  User   +---> |  Lambda     +---> |  & Alarms         |
-|         |     +-------------+     +------------------+
-     |               |
-     v               v
-+----------+     +----------+
-|  S3      |<----+  Terraform|
-|  Static  |     +----------+
-|  Hosting |
-+----+-----+
-     |
-     v
-+------------+
-| CloudFront |
-| + ACM Cert |
-+------------+
-     |
-     v
-+------------+
-| Custom DNS |
-| (Route53)  |
-+------------+
-```
+                                      +------------------+
+                                      |  Users/Clients   |
+                                      +--------+---------+
+                                               |
+                                               | HTTPS Request (Custom Domain)
+                                               v
+                                  +------------+------------+
+                                  |       CloudFront        |
+                                  |  (CDN + SSL via ACM)    |
+                                  +------------+------------+
+                                               |
+                    +--------------------------+--------------------------+
+                    |                                                     |
+          (Static site hosting)                                   (API requests)
+                    |                                                     |
+        +-----------+------------+                          +-------------+-------------+
+        |    S3 Bucket (Frontend) |                          |  API Gateway (REST API)   |
+        |  (Hosts index.html etc) |                          +-------------+-------------+
+        +------------------------+                                        |
+                                                                         |
+                                                         +---------------+--------------+
+                                                         |        AWS Lambda Function    |
+                                                         |   (Business Logic & DynamoDB) |
+                                                         +---------------+--------------+
+                                                                         |
+                                                         +---------------+--------------+
+                                                         |        DynamoDB Table          |
+                                                         |    (Stores submitted domains) |
+                                                         +-------------------------------+
+
+                                                                 |
+                                                                 v
+                                                      +----------------------+
+                                                      |    CloudWatch Logs    |
+                                                      |  (Lambda logs &      |
+                                                      |   API Gateway logs)  |
+                                                      +----------------------+
+
+                                                                 |
+                                                                 v
+                                                      +----------------------+
+                                                      | CloudWatch Alarms &   |
+                                                      | Metrics (e.g. errors) |
+                                                      +----------------------+
+
 
 ---
 
@@ -48,16 +69,33 @@ This project is a complete serverless platform built using **AWS**, **Terraform*
 
 ```
 custom-domain-ats/
-├── terraform/              # All Terraform infra code
-│   ├── main.tf
-│   ├── variables.tf        # Terraform variables
-│   └── lambda.zip          # Built from `lambda/`
-├── lambda/                 # Lambda function code
-│   └── handler.py
-├── frontend/               # Frontend HTML
-│   └── index.html
-└── .github/workflows/      # GitHub Actions CI/CD
-    └── deploy.yml
+│
+├── lambda/                         
+│   ├── handler.py                  # Your Lambda function logic
+│   ├── test_handler.py             # Pytest unit tests for Lambda
+│   └── requirements.txt            # boto3 + pytest
+│
+├── frontend/                       
+│   ├── index.html
+│   └── error.html
+│
+├── terraform/
+│   ├── acm_route53.tf              # ACM cert + Route53 validation records
+│   ├── api-gateway.tf              # API Gateway setup for /submit route
+│   ├── dynamodb_lambda.tf          # DynamoDB + Lambda definition
+│   ├── iam_lambda.tf               # IAM roles & permissions for Lambda
+│   ├── s3_cloudfront.tf            # S3 bucket + CloudFront distribution
+│   ├── provider.tf                 # AWS provider and backend block
+│   ├── variables.tf                # All input variables
+│   ├── output.tf                   # Output values (URLs, etc.)
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml              # GitHub Actions CI/CD pipeline
+│
+├── .gitignore                      # Ignore build, cache, state files
+└── README.md                       # Setup, deployment, explanation
+
 ```
 
 ---
@@ -194,7 +232,7 @@ These are the AWS services that may incur cost:
 * `frontend/index.html`: Customize your welcome page + input form.
 * `lambda/handler.py`: Adjust domain validation or logic.
 * `.github/workflows/deploy.yml`: Add your AWS credentials/secrets securely.
-* `main.tf`: Link your ACM cert ARN and Route53 records if customizing.
+* `acm_route53.tf`: Link your ACM cert ARN and Route53 records if customizing.
 * IMPORTANT: Configure the CNAME record in Route53
 Terraform automatically creates a CNAME (or Alias A) record that maps your custom domain (e.g., jobs.yourdomain.com) to the CloudFront distribution domain.
 Ensure your hosted zone is correct and that this DNS entry exists for your domain to route traffic properly to CloudFront over HTTPS.
