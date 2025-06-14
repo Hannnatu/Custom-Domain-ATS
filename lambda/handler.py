@@ -3,39 +3,44 @@ import os
 import boto3
 from datetime import datetime
 
-# Use os.getenv with fallback to avoid KeyError
-DYNAMODB_TABLE_NAME = os.getenv('DYNAMODB_TABLE', 'mock-table')
+# Read AWS region from environment, default to us-east-1 if missing
 AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
 
+# Initialize DynamoDB resource and table from environment variables
 dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)
-table = dynamodb.Table(DYNAMODB_TABLE_NAME)
+table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
 
 def lambda_handler(event, context):
     try:
         body = json.loads(event.get('body', '{}'))
         domain = body.get('domain')
+
         if not domain:
             return {
                 'statusCode': 400,
                 'body': json.dumps({'message': 'Domain is required'})
             }
+
         table.put_item(Item={
             'domain': domain,
             'createdAt': datetime.utcnow().isoformat()
         })
+
         return {
             'statusCode': 200,
             'body': json.dumps({'message': 'Domain saved successfully'})
         }
+
     except json.JSONDecodeError:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': 'Invalid JSON'})
+            'body': json.dumps({'message': 'Internal Server Error'})
         }
     except Exception as e:
         return {
             'statusCode': 500,
             'body': json.dumps({'message': 'Internal Server Error'})
         }
+
 
 
