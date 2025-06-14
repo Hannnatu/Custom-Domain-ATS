@@ -3,14 +3,15 @@ import os
 import boto3
 from datetime import datetime
 
-# Read AWS region from environment, default to us-east-1 if missing
-AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
-
-# Initialize DynamoDB resource and table from environment variables
-dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION)
-table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
-
 def lambda_handler(event, context):
+    # Set AWS region to avoid NoRegionError
+    region = os.getenv('AWS_REGION', 'us-east-1')
+    dynamodb = boto3.resource('dynamodb', region_name=region)
+
+    # Get DynamoDB table name from environment variable at runtime
+    table_name = os.environ['DYNAMODB_TABLE']
+    table = dynamodb.Table(table_name)
+
     try:
         body = json.loads(event.get('body', '{}'))
         domain = body.get('domain')
@@ -36,7 +37,7 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': json.dumps({'message': 'Internal Server Error'})
         }
-    except Exception as e:
+    except Exception:
         return {
             'statusCode': 500,
             'body': json.dumps({'message': 'Internal Server Error'})
