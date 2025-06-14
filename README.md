@@ -93,7 +93,7 @@ custom-domain-ats/
 2. Sees welcome page (index.html)
 3. Submits a form with a domain (e.g. `homerunner.com`)
 4. Lambda handles request, stores domain in DynamoDB
-5. Response returned within \~5s with success message
+5. Response returned within \~5mins with success message
 
 ---
 
