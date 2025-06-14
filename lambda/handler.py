@@ -4,12 +4,12 @@ import boto3
 from datetime import datetime
 
 def lambda_handler(event, context):
-    # Set AWS region to avoid NoRegionError
+    # Read env vars *only inside the function*, not at import time
     region = os.getenv('AWS_REGION', 'us-east-1')
-    dynamodb = boto3.resource('dynamodb', region_name=region)
+    table_name = os.getenv('DYNAMODB_TABLE', 'mock-table')
 
-    # Get DynamoDB table name from environment variable at runtime
-    table_name = os.environ['DYNAMODB_TABLE']
+    # Create the DynamoDB resource with a fallback region
+    dynamodb = boto3.resource('dynamodb', region_name=region)
     table = dynamodb.Table(table_name)
 
     try:
@@ -35,7 +35,7 @@ def lambda_handler(event, context):
     except json.JSONDecodeError:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': 'Internal Server Error'})
+            'body': json.dumps({'message': 'Invalid JSON'})
         }
     except Exception:
         return {
