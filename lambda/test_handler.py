@@ -1,9 +1,14 @@
 import json
 import pytest
+import os
 from handler import lambda_handler
 
+@pytest.fixture(autouse=True)
+def set_env_vars(monkeypatch):
+    monkeypatch.setenv('DYNAMODB_TABLE', 'mock-table')
+    monkeypatch.setenv('AWS_REGION', 'us-east-1')
+
 def test_lambda_handler_success(monkeypatch):
-    # Mock boto3 DynamoDB Table put_item
     class MockTable:
         def put_item(self, Item):
             assert 'domain' in Item
@@ -14,7 +19,7 @@ def test_lambda_handler_success(monkeypatch):
         def Table(self, name):
             return MockTable()
 
-    monkeypatch.setattr('handler.boto3.resource', lambda service: MockDynamoDB())
+    monkeypatch.setattr('handler.boto3.resource', lambda service, region_name=None: MockDynamoDB())
 
     event = {
         "body": json.dumps({"domain": "example.com"})
