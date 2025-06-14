@@ -3,8 +3,11 @@ import os
 import boto3
 from datetime import datetime
 
-# Initialize DynamoDB resource and table from environment variable
-dynamodb = boto3.resource('dynamodb')
+# Set default region if not provided (for CI/CD or testing but if done in github yaml then ignore)
+region = os.environ.get("AWS_REGION", "us-east-1")
+
+# Initialize DynamoDB resource and table
+dynamodb = boto3.resource('dynamodb', region_name=region)
 table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
 
 def lambda_handler(event, context):
@@ -26,10 +29,15 @@ def lambda_handler(event, context):
             'createdAt': datetime.utcnow().isoformat()
         })
 
-        # Success response
         return {
             'statusCode': 200,
             'body': json.dumps({'message': 'Domain saved successfully'})
+        }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': f'Internal server error: {str(e)}'})
         }
 
     except Exception as e:
