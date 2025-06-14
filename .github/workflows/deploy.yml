@@ -25,6 +25,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Set environment variables for Lambda tests
+        run: |
+          echo "DYNAMODB_TABLE=mock-table" >> $GITHUB_ENV
+          echo "AWS_REGION=us-east-1" >> $GITHUB_ENV
+
       - name: Run Lambda unit tests
         working-directory: ./lambda
         run: |
@@ -34,16 +39,20 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
+        working-directory: ./terraform
         run: terraform init
 
       - name: Terraform Validate
+        working-directory: ./terraform
         run: terraform validate
 
       - name: Terraform Plan
+        working-directory: ./terraform
         run: terraform plan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        working-directory: ./terraform
         run: terraform apply -auto-approve
 
 
