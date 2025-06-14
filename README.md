@@ -1,18 +1,6 @@
 Custom-Domain-ATS
-This project is a complete serverless platform built using AWS, Terraform, GitHub Actions (CI/CD), and a minimal frontend to support domain submissions and automatic secure (HTTPS) hosting via CloudFront + ACM. This platform allows users to configure custom domains (e.g., jobs.mycompany.com) to serve static pages securely over HTTPS using AWS services. Since we don’t own a real domain, this solution simulates all parts except the domain + HTTPS cert, which are left as placeholders or optional enhancements.
 
-Overview
-Users land on a static welcome page hosted via CloudFront (HTTPS).
-
-They can submit a custom domain through a form.
-
-The backend, powered by Lambda + API Gateway, writes the domain to DynamoDB.
-
-Infrastructure is fully deployed using Terraform, with CI/CD triggered on every push.
-
-All activity is monitored via CloudWatch Logs and Alarms.
-Custom-Domain-ATS
-This project is a complete serverless platform built using AWS, Terraform, GitHub Actions (CI/CD), and a minimal frontend to support domain submissions and automatic secure (HTTPS) hosting via CloudFront + ACM. This platform allows users to configure custom domains (e.g., jobs.mycompany.com) to serve static pages securely over HTTPS using AWS services. Since we don’t own a real domain, this solution simulates all parts except the domain + HTTPS cert, which are left as placeholders or optional enhancements.
+This project is a complete serverless platform built using AWS, Terraform, GitHub Actions (CI/CD), and a minimal frontend to support domain submissions and automatic secure (HTTPS) hosting via CloudFront + ACM. This platform allows users to configure custom domains (e.g., jobs.mycompany.com) to serve static pages securely over HTTPS using AWS services. Since i don’t own a real domain, this solution simulates all parts except the domain + HTTPS cert, which are left as placeholders or optional enhancements.
 
 Overview
 Users land on a static welcome page hosted via CloudFront (HTTPS).
@@ -25,14 +13,9 @@ Infrastructure is fully deployed using Terraform, with CI/CD triggered on every 
 
 All activity is monitored via CloudWatch Logs and Alarms.
 
+
 Architecture Diagram
-yaml
-Copy
-Edit
-Architecture Diagram
-yaml
-Copy
-Edit
+
         Users                                     
           |
       CloudFront (CDN + SSL)
@@ -46,14 +29,9 @@ Edit
                      DynamoDB
                          |
                    CloudWatch Logs & Alarms
+
 📁 Project Structure
-python
-Copy
-Edit
-📁 Project Structure
-python
-Copy
-Edit
+
 custom-domain-ats/
 ├── lambda/
 │   ├── handler.py             # Your Lambda function logic
@@ -76,14 +54,9 @@ custom-domain-ats/
 │       └── deploy.yml         # GitHub Actions CI/CD pipeline
 ├── .gitignore                 # Ignore build, cache, state files
 └── README.md                  # Setup, deployment, explanation
-Step-by-Step: How It Works
-Developer Flow
-Write Code: Modify frontend, lambda, or Terraform files.
 
-Push to GitHub: Triggers GitHub Actions workflow.
+How It Works
 
-GitHub Actions Steps:
-Step-by-Step: How It Works
 Developer Flow
 Write Code: Modify frontend, lambda, or Terraform files.
 
@@ -100,15 +73,7 @@ Zip Lambda
 Run Terraform to deploy infrastructure
 
 AWS Infrastructure is updated: Lambda, API Gateway, S3, CloudFront, etc.
-Checkout repo
 
-Setup Terraform
-
-Zip Lambda
-
-Run Terraform to deploy infrastructure
-
-AWS Infrastructure is updated: Lambda, API Gateway, S3, CloudFront, etc.
 
 User Flow
 User visits https://yourdomain.com
@@ -120,22 +85,10 @@ Submits a form with a domain (e.g. homerunner.com)
 Lambda handles request, stores domain in DynamoDB
 
 Response returned within ~5 minutes with success message
-User Flow
-User visits https://yourdomain.com
 
-Sees welcome page (index.html)
-
-Submits a form with a domain (e.g. homerunner.com)
-
-Lambda handles request, stores domain in DynamoDB
-
-Response returned within ~5 minutes with success message
 
 ⚙ Technologies Used
-Terraform: Infrastructure as Code
 
-AWS Services:
-⚙ Technologies Used
 Terraform: Infrastructure as Code
 
 AWS Services:
@@ -157,32 +110,8 @@ CloudWatch (Logs + Monitoring)
 Route53 (DNS)
 
 GitHub Actions: CI/CD Pipeline
-Lambda (Python)
 
-API Gateway (REST)
 
-S3 (Static Hosting)
-
-CloudFront (CDN + HTTPS)
-
-ACM (Certificates)
-
-DynamoDB (Data Storage)
-
-CloudWatch (Logs + Monitoring)
-
-Route53 (DNS)
-
-GitHub Actions: CI/CD Pipeline
-
-Monitoring & Observability
-Lambda Logs: CloudWatch log group /aws/lambda/domain_api
-
-Error Alarms: Triggered if Lambda throws any error in production
-
-CloudFront Logs: Delivered to a dedicated S3 logging bucket
-
-SNS Integration: Can be added for email/SMS alerts
 Monitoring & Observability
 Lambda Logs: CloudWatch log group /aws/lambda/domain_api
 
@@ -194,27 +123,10 @@ SNS Integration: Can be added for email/SMS alerts
 
 ✅ Setup Instructions
 1. Clone Repo
-bash
-Copy
-Edit
-✅ Setup Instructions
-1. Clone Repo
-bash
-Copy
-Edit
 git clone https://github.com/Hannnatu/custom-domain-ats.git
 cd custom-domain-ats
 2. Set Variables in variables.tf
 Create or edit the file at terraform/variables.tf:
-2. Set Variables in variables.tf
-Create or edit the file at terraform/variables.tf:
-
-hcl
-Copy
-Edit
-hcl
-Copy
-Edit
 variable "domain_name" {
   description = "Your main domain name"
   type        = string
@@ -227,28 +139,13 @@ variable "hosted_zone_id" {
   default     = "ZXXXXXXXXXXXX"
 }
 📝 Replace yourdomain.com and ZXXXXXXXXXXXX with your actual domain and hosted zone ID.
-📝 Replace yourdomain.com and ZXXXXXXXXXXXX with your actual domain and hosted zone ID.
 
 3. Deploy Infrastructure
-bash
-Copy
-Edit
-3. Deploy Infrastructure
-bash
-Copy
-Edit
 cd terraform
 terraform init
 zip lambda.zip ../lambda/handler.py
 terraform apply -auto-approve
 4. Push to GitHub
-bash
-Copy
-Edit
-4. Push to GitHub
-bash
-Copy
-Edit
 git add .
 git commit -m "Initial deployment"
 git push -u origin main
@@ -264,18 +161,7 @@ DNS Propagation Delay: Custom domains can take 2–10 minutes to reflect.
 Lambda Build & Zip: Ensure the Lambda file is zipped and updated before terraform apply.
 
 S3 + CloudFront TTL: Static files are cached, so updates may be delayed.
-🚧 Constraints & Errors Faced
-IAM Role Permissions: Required detailed IAM policies for Lambda, API Gateway, Route53, ACM, CloudWatch.
 
-ACM Certificates: Must be in us-east-1 for CloudFront compatibility.
-
-DNS Propagation Delay: Custom domains can take 2–10 minutes to reflect.
-
-Lambda Build & Zip: Ensure the Lambda file is zipped and updated before terraform apply.
-
-S3 + CloudFront TTL: Static files are cached, so updates may be delayed.
-
-💸 AWS Costs Incurred
 💸 AWS Costs Incurred
 These are the AWS services that may incur cost:
 
@@ -304,4 +190,4 @@ Terraform automatically creates a CNAME (or Alias A) record that maps your custo
 
 📜 License
 MIT License. Feel free to use, extend, and improve!
-MIT License. Feel free to use, extend, and improve!
+
