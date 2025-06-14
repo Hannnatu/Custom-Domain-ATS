@@ -45,3 +45,4 @@ def test_lambda_handler_invalid_json():
     body = json.loads(response['body'])
     assert body['message'] == 'Internal Server Error'
 
+
